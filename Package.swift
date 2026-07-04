@@ -6,6 +6,7 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [
         .iOS(.v18),
+        .macOS(.v15),
     ],
     products: [
         .library(name: "Matrix", targets: ["Matrix"]),
