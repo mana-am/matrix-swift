@@ -11,8 +11,9 @@ loader collection.
   <img src="https://img.shields.io/badge/SPM-compatible-brightgreen.svg" alt="SwiftPM compatible" />
 </p>
 
-<!-- Replace with a screen recording of the loaders in action -->
-<!-- <p align="center"><img src=".github/demo.gif" alt="Matrix dot loaders" width="480" /></p> -->
+<p align="center">
+  <video src="https://github.com/user-attachments/assets/eecb7f30-a9e4-4af2-ab0d-b70d75a0ee0a" width="480"></video>
+</p>
 
 ## When to use
 
