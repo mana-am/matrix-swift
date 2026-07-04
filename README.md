@@ -36,31 +36,29 @@ Then add `Matrix` to your target's dependencies and `import Matrix`.
 
 ## Quick start
 
+Pick a loader by **shape + index**, then size and color it:
+
 ```swift
 import SwiftUI
 import Matrix
 
-struct ThinkingRow: View {
+struct LoadingRow: View {
     var body: some View {
-        // Picks a loader + coordinated color deterministically from `stageKey`,
-        // and runs it at a speed that reflects the current phase.
-        MatrixLoadingView(
-            size: 22,
-            phase: .streaming,
-            stageKey: "tools",
-            useRandomColor: true
-        )
+        HStack(spacing: 16) {
+            MatrixLoader(.square(3), size: 28)
+            MatrixLoader(.hex(1), size: 28, color: .blue)
+            MatrixLoader(.triangle(5), size: 28, color: .pink, speed: 1.4)
+            MatrixLoader(.fun(.heart), size: 28, color: .red)
+            MatrixLoader(.icon, size: 28)
+        }
     }
 }
 ```
 
-Scope every nested loader to one "turn" so all loaders in a unit of work share
-the same pick, and the next turn gets a fresh one:
-
-```swift
-messageBody
-    .matrixLoaderTurnKey(message.id)
-```
+Index ranges: `square` 1…23 · `circular` 1…20 · `hex` 1…10 · `grid3` 1…16 & 18…21
+· `triangle` 1…20 · `fun(.heart / .arrow / .sparkle / …)` · `icon`. Every id is
+enumerable via `MatrixLoaderID.all` — handy for building a picker or choosing one
+at random.
 
 ## Example
 
@@ -95,9 +93,8 @@ loader is browsable in `MatrixLoaderGallery`.
 
 ## How it works
 
-- **Deterministic pick.** `MatrixLoadingView` hashes `stageKey` (or a parent
-  `matrixLoaderTurnKey`) into a stable seed, so a given identity always resolves
-  to the same loader + color across view rebuilds — no visible reshuffling.
+- **No assets, no dependencies.** Pure SwiftUI — every loader is drawn from
+  animated `Circle`s driven by a `TimelineView`.
 - **Pattern-driven grids.** Each loader animates a mask over a small grid
   (5×5 / hex / 3×3 / 7×7 triangle) via a per-cell opacity resolver, ported 1:1
   from the upstream CSS keyframes and JS math.
@@ -106,11 +103,11 @@ loader is browsable in `MatrixLoaderGallery`.
 
 ## Public API
 
-- `MatrixLoadingView` — the drop-in, auto-selecting loader.
-- `ChatLoadingPhase` — phase → speed mapping (`waiting` / `thinking` /
-  `streaming` / `toolRunning` / `toolWaiting`).
-- `View.matrixLoaderTurnKey(_:)` — scope a subtree to one loader "turn".
-- `MatrixLoaderGallery` — the interactive showcase.
+- `MatrixLoader` — render a specific loader by `MatrixLoaderID` (shape + index),
+  sized and colored to taste.
+- `MatrixLoaderID` / `FunLoader` — the loader catalog; `MatrixLoaderID.all`
+  enumerates every loader.
+- `MatrixLoaderGallery` — the interactive showcase (bottom tab bar per family).
 
 ## Credits & License
 

@@ -43,6 +43,30 @@ public struct MatrixLoaderGallery: View {
             case .icon: return "Icon"
             }
         }
+        var symbol: String {
+            switch self {
+            case .chat: return "message.fill"
+            case .fun: return "sparkles"
+            case .square: return "square.grid.2x2.fill"
+            case .circular: return "circle.grid.2x2.fill"
+            case .hex: return "hexagon.fill"
+            case .grid3: return "square.grid.3x3.fill"
+            case .triangle: return "triangle.fill"
+            case .icon: return "app.dashed"
+            }
+        }
+        var tabTitle: String {
+            switch self {
+            case .chat: return "Chat"
+            case .fun: return "Fun"
+            case .square: return "Square"
+            case .circular: return "Circle"
+            case .hex: return "Hex"
+            case .grid3: return "3×3"
+            case .triangle: return "Tri"
+            case .icon: return "Icon"
+            }
+        }
     }
 
     private enum Layout {
@@ -53,10 +77,9 @@ public struct MatrixLoaderGallery: View {
 
     @State private var theme: ThemeMode = .system
     @State private var speed: Double = 1.0
-    // Default to the lightest tab (3 icons, no nested scroll) so we never hit the chat
-    // tab's 27+ candidate list on first render — that grid is the most expensive one and
-    // has been the crash culprit when it tries to bring up too many TimelineViews at once.
-    @State private var category: Category = .icon
+    // Only the selected category's grid is mounted at a time (see `content`), so a
+    // rich default is fine — Square lazily renders its 23 loaders via LazyVGrid.
+    @State private var category: Category = .square
     @State private var colorChoice: ColorChoice = .primary
 
     enum ColorChoice: String, CaseIterable, Identifiable {
@@ -86,45 +109,47 @@ public struct MatrixLoaderGallery: View {
                 .padding(.top, 12)
                 .padding(.bottom, 8)
 
-            // Horizontal tab strip lives outside the main vertical ScrollView to avoid
-            // nested-scroll layout asserts on iOS 18.
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(Category.allCases) { c in
-                        Button {
-                            withAnimation(.easeOut(duration: 0.15)) { category = c }
-                        } label: {
-                            Text(c.label)
-                                .font(.subheadline)
-                                .fontWeight(category == c ? .semibold : .regular)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule().fill(
-                                        category == c
-                                            ? Color.primary.opacity(0.12)
-                                            : Color(.tertiarySystemBackground)
-                                    ))
-                                .foregroundStyle(
-                                    category == c ? Color.primary : Color.secondary
-                                )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 6)
-            }
-
             ScrollView {
                 content
                     .padding(.horizontal)
-                    .padding(.bottom, 32)
+                    .padding(.top, 4)
+                    .padding(.bottom, 24)
             }
+
+            categoryTabBar
         }
-        .navigationTitle("Dot Matrix Gallery")
+        .navigationTitle(category.label)
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(theme.scheme)
+    }
+
+    /// Bottom tab bar that switches loader families. A custom bar (not `TabView`)
+    /// so only the *selected* family's grid is ever mounted — mounting every
+    /// family's animated loaders at once overwhelms the CoreAnimation pipeline.
+    @ViewBuilder
+    private var categoryTabBar: some View {
+        HStack(spacing: 0) {
+            ForEach(Category.allCases) { c in
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { category = c }
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: c.symbol)
+                            .font(.system(size: 16))
+                        Text(c.tabTitle)
+                            .font(.system(size: 10, weight: .medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
+                    .foregroundStyle(category == c ? Color.accentColor : Color.secondary)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.bottom, 2)
+        .background(.bar)
+        .overlay(alignment: .top) { Divider() }
     }
 
     @ViewBuilder

@@ -146,4 +146,10 @@ enum MatrixLoadingPool {
         let normalized = ((seed % count) + count) % count
         return all[normalized]
     }
+
+    /// Look up an entry by its stable id (e.g. `"S3"`, `"Hex1"`, `"G3-16"`).
+    /// Used by `MatrixLoader` to resolve a `MatrixLoaderID` to its builder.
+    static func entry(id: String) -> LoaderEntry? {
+        all.first { $0.id == id }
+    }
 }

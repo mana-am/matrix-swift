@@ -36,4 +36,15 @@ final class MatrixTests: XCTestCase {
         XCTAssertEqual(p.size, 22)
         XCTAssertEqual(p.pattern, .full)
     }
+
+    /// The public loader catalog: 23+20+10+20+20 grids + 18 fun + 1 icon = 112,
+    /// and every pooled id resolves to a real entry.
+    func testLoaderCatalog() {
+        XCTAssertEqual(MatrixLoaderID.all.count, 112)
+        for id in MatrixLoaderID.all {
+            if let poolID = id.poolID {
+                XCTAssertNotNil(MatrixLoadingPool.entry(id: poolID), "missing \(poolID)")
+            }
+        }
+    }
 }
