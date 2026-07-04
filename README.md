@@ -133,7 +133,7 @@ loader is browsable in `MatrixLoaderGallery`.
   colored to taste. Equivalent to the named components; nicer when the choice is data.
 - `MatrixLoaderID` / `FunLoader` — the loader catalog; `MatrixLoaderID.all`
   enumerates every loader.
-- `MatrixLoaderGallery` — the interactive showcase (bottom tab bar per family).
+- `MatrixLoaderGallery` — the interactive showcase (Liquid-Glass chip bar per family).
 
 ## Credits & License
 
