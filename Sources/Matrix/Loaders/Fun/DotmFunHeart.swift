@@ -1,0 +1,20 @@
+import SwiftUI
+
+/// Heart silhouette pulsing on a slowed lub-dub heartbeat (~50 BPM @ cycleSec 1.2).
+/// All active cells beat in sync — feels organic, "alive AI".
+struct DotmFunHeart: View {
+    var props = DotMatrixCommonProps(pattern: .heart)
+    var body: some View {
+        DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
+            let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
+            let midOp = props.opacityMid ?? DMKeyframes.DEFAULT_MID
+            let peakOp = props.opacityPeak ?? DMKeyframes.DEFAULT_PEAK
+            if ctx.reducedMotion || ctx.phase == .idle {
+                return midOp
+            }
+            let cycleSec = 1.2
+            let t = DMKeyframes.phaseWithDelay(now: now, cycleSec: cycleSec, delaySec: 0)
+            return DMKeyframes.heartbeat(t, base: baseOp, mid: midOp, peak: peakOp)
+        }
+    }
+}
