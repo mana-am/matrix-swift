@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Color" : {
-
-    },
     "loader.matrix.accessibilityLabel" : {
       "comment" : "VoiceOver label for the chat loading dot-matrix indicator",
       "extractionState" : "manual",
@@ -21,12 +18,6 @@
           }
         }
       }
-    },
-    "Speed" : {
-
-    },
-    "Theme" : {
-
     }
   },
   "version" : "1.0"

@@ -4,3 +4,6 @@
 xcuserdata/
 *.xcodeproj
 Package.resolved
+
+# Xcode-generated package metadata (also nested under *.swiftpm bundles)
+.swiftpm/
