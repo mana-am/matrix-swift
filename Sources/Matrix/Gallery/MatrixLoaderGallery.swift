@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Showcases every dot-matrix loader family (Square / Circular / Hex / Fun / 3×3
 /// / Triangle / Icon) ported from `zzzzshawn/matrix`. The toolbar exposes color
-/// scheme, speed, and color; the `Chat` tab previews loaders at chat scale.
+/// scheme, speed, and color; a Liquid-Glass chip bar switches families.
 public struct MatrixLoaderGallery: View {
     public init() {}
 
@@ -27,13 +27,12 @@ public struct MatrixLoaderGallery: View {
     }
 
     enum Category: String, CaseIterable, Identifiable {
-        // `.all` removed — rendering 64 loaders with active TimelineViews crashes SwiftUI
-        // on real device (memory + CoreAnimation pipeline overload). Use the category tabs.
-        case chat, fun, square, circular, hex, grid3, triangle, icon
+        // `.all` removed — rendering every family's active TimelineViews at once
+        // overwhelms SwiftUI / CoreAnimation on device. Switch families via the chip bar.
+        case fun, square, circular, hex, grid3, triangle, icon
         var id: String { rawValue }
         var label: String {
             switch self {
-            case .chat: return "Chat"
             case .fun: return "Fun (18)"
             case .square: return "Square (23)"
             case .circular: return "Circular (20)"
@@ -45,7 +44,6 @@ public struct MatrixLoaderGallery: View {
         }
         var symbol: String {
             switch self {
-            case .chat: return "message.fill"
             case .fun: return "sparkles"
             case .square: return "square.grid.2x2.fill"
             case .circular: return "circle.grid.2x2.fill"
@@ -57,7 +55,6 @@ public struct MatrixLoaderGallery: View {
         }
         var tabTitle: String {
             switch self {
-            case .chat: return "Chat"
             case .fun: return "Fun"
             case .square: return "Square"
             case .circular: return "Circle"
@@ -116,40 +113,62 @@ public struct MatrixLoaderGallery: View {
                     .padding(.bottom, 24)
             }
 
-            categoryTabBar
+            categoryChipBar
         }
         .navigationTitle(category.label)
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(theme.scheme)
     }
 
-    /// Bottom tab bar that switches loader families. A custom bar (not `TabView`)
-    /// so only the *selected* family's grid is ever mounted — mounting every
-    /// family's animated loaders at once overwhelms the CoreAnimation pipeline.
+    /// Bottom chip bar that switches loader families. A horizontal row of Liquid-Glass
+    /// capsule chips (not a `TabView`) so only the *selected* family's grid is ever
+    /// mounted — mounting every family's animated loaders at once overwhelms the
+    /// CoreAnimation pipeline. `.glassEffect` is used raw here (this package stays
+    /// dependency-free, so there is no app `backport` shim); it degrades to a material
+    /// capsule below iOS 26.
     @ViewBuilder
-    private var categoryTabBar: some View {
-        HStack(spacing: 0) {
-            ForEach(Category.allCases) { c in
-                Button {
-                    withAnimation(.easeOut(duration: 0.15)) { category = c }
-                } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: c.symbol)
-                            .font(.system(size: 16))
-                        Text(c.tabTitle)
-                            .font(.system(size: 10, weight: .medium))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 8)
-                    .foregroundStyle(category == c ? Color.accentColor : Color.secondary)
-                    .contentShape(Rectangle())
+    private var categoryChipBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            chipRow
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+        }
+    }
+
+    @ViewBuilder
+    private var chipRow: some View {
+        if #available(iOS 26.0, *) {
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    ForEach(Category.allCases) { chip(for: $0) }
                 }
-                .buttonStyle(.plain)
+            }
+        } else {
+            HStack(spacing: 8) {
+                ForEach(Category.allCases) { chip(for: $0) }
             }
         }
-        .padding(.bottom, 2)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
+    }
+
+    @ViewBuilder
+    private func chip(for c: Category) -> some View {
+        let selected = category == c
+        Button {
+            withAnimation(.easeOut(duration: 0.18)) { category = c }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: c.symbol)
+                    .font(.system(size: 12, weight: .semibold))
+                Text(c.tabTitle)
+                    .font(.system(size: 13, weight: .medium))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .foregroundStyle(selected ? Color.white : Color.primary)
+            .modifier(GlassChipStyle(selected: selected))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
@@ -202,7 +221,6 @@ public struct MatrixLoaderGallery: View {
     @ViewBuilder
     private var content: some View {
         switch category {
-        case .chat: chatGrid
         case .fun: funGrid
         case .square: squareGrid
         case .circular: circularGrid
@@ -408,176 +426,6 @@ public struct MatrixLoaderGallery: View {
         }
     }
 
-    /// Side-by-side: the production `MatrixLoadingView` (left of each row, at chat's real
-    /// sizes) vs. the individual loaders that feed its random pool. Useful for sanity-
-    /// checking the production widget alongside specific candidates.
-    private var chatGrid: some View {
-        VStack(spacing: 18) {
-            chatRow(
-                title: "Preparation (size 20, .thinking)",
-                production: AnyView(
-                    MatrixLoadingView(
-                        size: 20,
-                        phase: .thinking,
-                        stageKey: "preview-prep",
-                        useRandomColor: true
-                    )
-                ),
-                size: 20
-            )
-            chatRow(
-                title: "Tool / Subagent (size 17, .toolRunning)",
-                production: AnyView(
-                    MatrixLoadingView(
-                        size: 17,
-                        phase: .toolRunning,
-                        stageKey: "preview-tool",
-                        useRandomColor: false
-                    )
-                ),
-                size: 17
-            )
-        }
-        .padding(.horizontal, 4)
-    }
-
-    @ViewBuilder
-    private func chatRow(title: String, production: AnyView, size: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 14) {
-                    chatCandidate("Prod", size: size) { production }
-                    chatCandidate("Icon", size: size) {
-                        DotMatrixIcon(
-                            size: size, dotSize: max(2, floor(size / 6)),
-                            color: colorChoice.color, speed: speed
-                        )
-                    }
-                    chatCandidate("S2", size: size) {
-                        DotmSquare2(props: chatProps5(size: size))
-                    }
-                    chatCandidate("S3", size: size) {
-                        DotmSquare3(props: chatProps5(size: size))
-                    }
-                    chatCandidate("S5", size: size) {
-                        DotmSquare5(props: chatProps5(size: size))
-                    }
-                    chatCandidate("S6", size: size) {
-                        DotmSquare6(props: chatProps5(size: size))
-                    }
-                    chatCandidate("S11", size: size) {
-                        DotmSquare11(props: chatProps5(size: size))
-                    }
-                    chatCandidate("C1", size: size) {
-                        DotmCircular1(props: chatProps5(size: size))
-                    }
-                    chatCandidate("C2", size: size) {
-                        DotmCircular2(props: chatProps5(size: size))
-                    }
-                    chatCandidate("C19", size: size) {
-                        DotmCircular19(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Heart", size: size) {
-                        DotmFunHeart(props: chatProps5Pattern(size: size, pattern: .heart))
-                    }
-                    chatCandidate("M", size: size) {
-                        DotmFunManaM(props: chatProps5Pattern(size: size, pattern: .manaM))
-                    }
-                    chatCandidate("Arrow", size: size) {
-                        DotmFunArrow(props: chatProps5Pattern(size: size, pattern: .arrowRight))
-                    }
-                    chatCandidate("Ink", size: size) {
-                        DotmFunInkBleed(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Tokens", size: size) {
-                        DotmFunTokenFall(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Sparkle", size: size) {
-                        DotmFunSparkle(props: chatProps5Pattern(size: size, pattern: .sparkle))
-                    }
-                    chatCandidate("Eye", size: size) {
-                        DotmFunEye(props: chatProps5Pattern(size: size, pattern: .eye))
-                    }
-                    chatCandidate("Lightning", size: size) {
-                        DotmFunLightning(
-                            props: chatProps5Pattern(size: size, pattern: .lightning))
-                    }
-                    chatCandidate("Flower", size: size) {
-                        DotmFunFlower(props: chatProps5Pattern(size: size, pattern: .flower))
-                    }
-                    chatCandidate("Wave", size: size) {
-                        DotmFunWaveShape(props: chatProps5Pattern(size: size, pattern: .wave))
-                    }
-                    chatCandidate("Hex", size: size) {
-                        DotmFunHexagon(props: chatProps5Pattern(size: size, pattern: .hexagon))
-                    }
-                    chatCandidate("Breath", size: size) {
-                        DotmFunBreathing(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Bend", size: size) {
-                        DotmFunWaveBend(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Snake", size: size) {
-                        DotmFunSnake(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Confetti", size: size) {
-                        DotmFunConfetti(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Shimmer", size: size) {
-                        DotmFunShimmer(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Pulse", size: size) {
-                        DotmFunPulseRing(props: chatProps5(size: size))
-                    }
-                    chatCandidate("Cursor", size: size) {
-                        DotmFunCursor(props: chatProps5(size: size))
-                    }
-                }
-                .padding(.horizontal, 2)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func chatCandidate<V: View>(
-        _ label: String, size: CGFloat, @ViewBuilder content: () -> V
-    ) -> some View {
-        VStack(spacing: 6) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(.tertiarySystemBackground))
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
-                content()
-            }
-            .frame(width: size + 12, height: size + 12)
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    /// 5×5 props sized for chat: dotSize ≈ size / 6, cellPadding 1, default `.full` pattern.
-    private func chatProps5(size: CGFloat) -> DotMatrixCommonProps {
-        chatProps5Pattern(size: size, pattern: .full)
-    }
-
-    private func chatProps5Pattern(size: CGFloat, pattern: MatrixPattern) -> DotMatrixCommonProps {
-        let dot = max(2, floor(size / 6))
-        return DotMatrixCommonProps(
-            size: dot * 5 + 4,
-            dotSize: dot,
-            color: colorChoice.color == .primary ? Color(.secondaryLabel) : colorChoice.color,
-            speed: speed,
-            pattern: pattern,
-            cellPadding: 1,
-            showInactiveDots: true,
-            inactiveDotOpacity: 0.06
-        )
-    }
-
-
     @ViewBuilder
     private func tile<V: View>(_ label: String, @ViewBuilder content: () -> V) -> some View {
         VStack(spacing: 6) {
@@ -610,6 +458,23 @@ public struct MatrixLoaderGallery: View {
         )
     }
 
+}
+
+
+/// Liquid-Glass capsule background for a chip. Uses `.glassEffect` on iOS 26+ and a
+/// material capsule as a fallback, keeping the package free of app-side glass shims.
+private struct GlassChipStyle: ViewModifier {
+    let selected: Bool
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(selected ? .regular.tint(.accentColor) : .regular, in: .capsule)
+        } else {
+            content.background(
+                selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.ultraThinMaterial),
+                in: Capsule()
+            )
+        }
+    }
 }
 
 #Preview {
