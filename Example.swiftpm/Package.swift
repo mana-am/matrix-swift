@@ -37,7 +37,7 @@ let package = Package(
         .executableTarget(
             name: "AppModule",
             dependencies: [
-                .product(name: "Matrix", package: "Matrix")
+                .product(name: "Matrix", package: "matrix-swift")
             ],
             path: "."
         )
