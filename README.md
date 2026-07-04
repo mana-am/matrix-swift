@@ -3,7 +3,8 @@
 **Animated dot-matrix loading indicators for SwiftUI.**
 100+ deterministic, pattern-driven dot loaders that render as tiny animated grids —
 a faithful Swift/SwiftUI port of the [`zzzzshawn/matrix`](https://github.com/zzzzshawn/matrix)
-loader collection.
+loader collection. They power the chat "thinking" states in [Mana](https://mana.am),
+an AI-first app builder for iOS.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Swift-5.9%2B-orange.svg" alt="Swift 5.9+" />
@@ -140,3 +141,5 @@ loader is browsable in `MatrixLoaderGallery`.
 Ported from [`zzzzshawn/matrix`](https://github.com/zzzzshawn/matrix), published
 as a standalone Swift package **with the author's kind permission**. Please keep
 the attribution and the link back to the upstream project. See [LICENSE](LICENSE).
+
+Maintained by [Mana](https://mana.am) — an AI-first app builder for iOS.
