@@ -3,9 +3,31 @@ import SwiftUI
 /// 3×3 distance ripple — Euclidean rings pulse outward; `dmx-ripple-3` keyframe
 /// with `ease-out` timing and per-dot delay = distance ×0.13 ×cycle
 /// (`dmx-distance-ripple-3`, dur ×1.3). Mirrors `dotm-3x3-12.tsx` (speed 1.75).
-struct Dotm3x3_12: View {
+public struct Dotm3x3_12: View {
     var props = DotMatrixCommonProps(speed: 1.75, pattern: .full)
-    var body: some View {
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<Dotm3x3_12 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
+    public var body: some View {
         DotMatrix3Base(props: props, bypassOpacityRemap: true) { ctx, now in
             let t3 = dm3UserTriplet(props)
             let ring = max(0, min(2, Int(ctx.distanceFromCenter.rounded())))

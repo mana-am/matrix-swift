@@ -3,15 +3,37 @@ import SwiftUI
 /// Triangle 5 — a horizontal scan line ping-pongs up and down the silhouette
 /// with a soft beam falloff. Stepped cycle (42 steps, 1700ms).
 /// Mirrors `dotm-triangle-5.tsx`.
-struct DotmTriangle5: View {
+public struct DotmTriangle5: View {
     var props = DotMatrixCommonProps(size: 30, dotSize: 4, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmTriangle5 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let STEP_COUNT = 42
     private static let BASE_OPACITY = 0.06
     private static let MID_OPACITY = 0.3
     private static let HIGH_OPACITY = 0.92
 
-    var body: some View {
+    public var body: some View {
         DotMatrixTriangleBase(props: props) { row, col, now, active in
             let frame = steppedCycle(
                 now: now, cycleMsBase: 1700, steps: Self.STEP_COUNT, speed: 1, active: active)

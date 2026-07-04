@@ -1,8 +1,30 @@
 import SwiftUI
 
 /// Boustrophedon snake with 8-level tail — JS-step, steppedCycle.
-struct DotmSquare2: View {
+public struct DotmSquare2: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmSquare2 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let SNAKE_TAIL: [Double] = [1, 0.82, 0.68, 0.54, 0.42, 0.31, 0.22, 0.14]
     private static let BASE_OPACITY: Double = 0.08
@@ -45,7 +67,7 @@ struct DotmSquare2: View {
         return visits
     }()
 
-    var body: some View {
+    public var body: some View {
         let routeLen = Self.ROUTE.count
         DotMatrixBase(props: props) { ctx, now in
             // When idle, steppedCycle returns idleStep=0 (matches JS useSteppedCycle behavior).

@@ -2,8 +2,30 @@ import SwiftUI
 
 /// Hourglass Flip — 4 frames flip between hourglass and equator. Mirrors
 /// upstream `dotm-hex-8.tsx`.
-struct DotmHex8: View {
+public struct DotmHex8: View {
     var props = DotMatrixCommonProps(speed: 1.35, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmHex8 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let baseOp: Double = 0.20
     private static let midOp: Double = 0.46
@@ -50,7 +72,7 @@ struct DotmHex8: View {
         ]
     }()
 
-    var body: some View {
+    public var body: some View {
         DotMatrixHexBase(props: props, timing: .stepped(steps: Self.frames.count, cycleMsBase: 1400)) {
             row, col, stepValue in
             let step = max(0, min(Self.frames.count - 1, Int(stepValue)))

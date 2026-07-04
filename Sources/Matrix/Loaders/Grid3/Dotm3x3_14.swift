@@ -3,14 +3,36 @@ import SwiftUI
 /// 3×3 frame chase (stepped) — a head walks the outer ring with a 3-level fading
 /// tail while the center flickers. Stepped cycle (8 steps, 1150ms); fully
 /// JS-computed opacity (remapped). Mirrors `dotm-3x3-14.tsx` (speed 1.6).
-struct Dotm3x3_14: View {
+public struct Dotm3x3_14: View {
     var props = DotMatrixCommonProps(speed: 1.6, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<Dotm3x3_14 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let BASE_OPACITY = 0.06
     private static let TAIL_LEVELS: [Double] = [0.92, 0.52, 0.24]
     private static let PERIMETER = 8
 
-    var body: some View {
+    public var body: some View {
         DotMatrix3Base(props: props) { ctx, now in
             let active = ctx.phase != .idle && !ctx.reducedMotion
             let step = steppedCycle(

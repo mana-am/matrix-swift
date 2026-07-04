@@ -3,8 +3,30 @@ import SwiftUI
 /// Triangle 14 — a soft vertical pillar of brightness sweeps column 0→6; only
 /// masked dots respond, so the triangle lights one vertical slice at a time.
 /// Cycle (1500ms). Mirrors `dotm-triangle-14.tsx`.
-struct DotmTriangle14: View {
+public struct DotmTriangle14: View {
     var props = DotMatrixCommonProps(size: 30, dotSize: 4, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmTriangle14 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let BASE_OPACITY = 0.07
     private static let MID_OPACITY = 0.32
@@ -23,7 +45,7 @@ struct DotmTriangle14: View {
         return min(HIGH_OPACITY, opacity)
     }
 
-    var body: some View {
+    public var body: some View {
         DotMatrixTriangleBase(props: props) { row, col, now, active in
             let phase = active ? cyclePhase(now: now, cycleMsBase: 1500, speed: 1, active: true) : 0.12
             return Self.opacityForCell(row, col, phase)

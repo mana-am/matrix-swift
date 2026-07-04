@@ -1,14 +1,36 @@
 import SwiftUI
 
 /// Swing rung — active row sweeps with swinging anchors.
-struct DotmCircular14: View {
+public struct DotmCircular14: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmCircular14 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
     private static let BASE_OPACITY: Double = 0.07
     private static let RUNG_OPACITY: Double = 0.95
     private static let SIDE_OPACITY: Double = 0.56
     private static let GHOST_OPACITY: Double = 0.28
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props) { ctx, now in
             guard isWithinCircularMask(row: ctx.row, col: ctx.col) else { return 0 }
 

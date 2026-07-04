@@ -6,10 +6,10 @@ import SwiftUI
 ///   .dmx-ripple — cycle = `--dmx-cycle (1500ms)` × `--dmx-speed`,
 ///   delay = `Round(distanceFromCenter) * 0.2333 * cycle`,
 ///   cubic-bezier(0.42, 0, 0.58, 1).
-struct DotMatrixIcon: View {
+public struct DotMatrixIcon: View {
     var props: DotMatrixCommonProps
 
-    init(
+    public init(
         size: CGFloat = 24,
         dotSize: CGFloat = 3,
         color: Color = .primary,
@@ -38,7 +38,7 @@ struct DotMatrixIcon: View {
         )
     }
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
             let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
             let peakOp = props.opacityPeak ?? DMKeyframes.DEFAULT_PEAK

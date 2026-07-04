@@ -4,9 +4,31 @@ import SwiftUI
 /// progressively later and decays at its own rate. Distinct from `centerOriginRipple`
 /// (which loops every cell on the same envelope) because each ring has independent
 /// linger and decay.
-struct DotmFunPulseRing: View {
+public struct DotmFunPulseRing: View {
     var props = DotMatrixCommonProps(pattern: .full)
-    var body: some View {
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmFunPulseRing size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
+    public var body: some View {
         DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
             let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
             let midOp = props.opacityMid ?? DMKeyframes.DEFAULT_MID

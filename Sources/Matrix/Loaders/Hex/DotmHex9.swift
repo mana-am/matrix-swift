@@ -2,14 +2,36 @@ import SwiftUI
 
 /// Petal Shimmer — 2 main petals + 2 cross petals rotate around the center,
 /// outer ring shimmers based on radius. Mirrors upstream `dotm-hex-9.tsx`.
-struct DotmHex9: View {
+public struct DotmHex9: View {
     var props = DotMatrixCommonProps(speed: 1.8, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmHex9 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let petalWidth: Double = 0.42
     private static let baseOp: Double = 0.15
     private static let highOp: Double = 0.98
 
-    var body: some View {
+    public var body: some View {
         DotMatrixHexBase(props: props, timing: .cycle(cycleMsBase: 1650)) { row, col, phase in
             let polar = HexCell.polar(row: row, col: col)
             if polar.radius < 0.1 {

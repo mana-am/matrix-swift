@@ -3,9 +3,31 @@ import SwiftUI
 /// A drop of ink hits cell (2,2) and bleeds outward. Per-cell delay is proportional to
 /// Manhattan distance from center, so the ink "spreads" radially. Uses an asymmetric
 /// ease-out keyframe so the saturation rises fast and fades slowly, like real ink on paper.
-struct DotmFunInkBleed: View {
+public struct DotmFunInkBleed: View {
     var props = DotMatrixCommonProps(pattern: .full)
-    var body: some View {
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmFunInkBleed size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
+    public var body: some View {
         DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
             let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
             let midOp = props.opacityMid ?? DMKeyframes.DEFAULT_MID

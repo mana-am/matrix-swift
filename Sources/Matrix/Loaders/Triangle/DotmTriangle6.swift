@@ -3,8 +3,30 @@ import SwiftUI
 /// Triangle 6 — braille-style fill: a single wave front sweeps the six braille
 /// dots (intro), then the whole glyph blinks, then fades and resets. Cycle
 /// (3000ms). Mirrors `dotm-triangle-6.tsx`.
-struct DotmTriangle6: View {
+public struct DotmTriangle6: View {
     var props = DotMatrixCommonProps(size: 30, dotSize: 4, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmTriangle6 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let LOW_OPACITY = 0.07
     private static let MID_OPACITY = 0.36
@@ -120,7 +142,7 @@ struct DotmTriangle6: View {
         return ([1, 1, 1, 1, 1, 1], 1, resetMul)
     }
 
-    var body: some View {
+    public var body: some View {
         DotMatrixTriangleBase(props: props) { row, col, now, active in
             let params: (fills: [Double], blinkMul: Double, resetMul: Double)
             if !active {

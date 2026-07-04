@@ -3,14 +3,36 @@ import SwiftUI
 /// A 3-cell snake (head + 2 trailing) chases its own tail along a boustrophedon path.
 /// JS-step style: at each step `s`, the cells with snake-order ∈ {s, s-1, s-2} (mod 25)
 /// are lit at peak / mid / base.
-struct DotmFunSnake: View {
+public struct DotmFunSnake: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmFunSnake size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
     private static let SNAKE_LEN = 3
     private static let TOTAL = 25
     private static let CYCLE_SEC: Double = 2.5
     private static let STEPS = TOTAL  // one cell per step
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
             let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
             let midOp = props.opacityMid ?? DMKeyframes.DEFAULT_MID

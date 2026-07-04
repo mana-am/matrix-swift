@@ -3,13 +3,35 @@ import SwiftUI
 /// Liquid Vortex — a sinusoidal lens slides across the grid leaving
 /// dual ripples + a vertical compression beat + outer shell sheen.
 /// Mirrors upstream `dotm-hex-10.tsx`.
-struct DotmHex10: View {
+public struct DotmHex10: View {
     var props = DotMatrixCommonProps(speed: 1.55, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmHex10 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let baseOp: Double = 0.09
     private static let highOp: Double = 0.98
 
-    var body: some View {
+    public var body: some View {
         DotMatrixHexBase(props: props, timing: .cycle(cycleMsBase: 1850)) { row, col, phase in
             let p = HexCell.point(row: row, col: col)
             let radius = sqrt(p.x * p.x + p.y * p.y)

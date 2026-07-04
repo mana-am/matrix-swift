@@ -4,9 +4,31 @@ import SwiftUI
 /// core pulses. Ring dots run `dmx-ripple-3` (`dmx-frame-chase-3`, dur ×0.98,
 /// delay = ringOrder ×0.09 ×cycle); the center runs `dmx-ripple-3`
 /// (`dmx-core-pulse-3`, dur ×0.46, no delay). Mirrors `dotm-3x3-10.tsx`.
-struct Dotm3x3_10: View {
+public struct Dotm3x3_10: View {
     var props = DotMatrixCommonProps(speed: 1.75, pattern: .full)
-    var body: some View {
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<Dotm3x3_10 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
+    public var body: some View {
         DotMatrix3Base(props: props, bypassOpacityRemap: true) { ctx, now in
             let t3 = dm3UserTriplet(props)
 

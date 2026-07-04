@@ -3,8 +3,30 @@ import SwiftUI
 /// Triangle 19 — a soft rotating wedge from the heart: brightness peaks where the
 /// polar angle matches the spinning phase (searchlight pivot). Cycle (1400ms).
 /// Mirrors `dotm-triangle-19.tsx`.
-struct DotmTriangle19: View {
+public struct DotmTriangle19: View {
     var props = DotMatrixCommonProps(size: 30, dotSize: 4, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmTriangle19 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let BASE_OPACITY = 0.08
     private static let MID_OPACITY = 0.38
@@ -36,7 +58,7 @@ struct DotmTriangle19: View {
         return min(HIGH_OPACITY, BASE_OPACITY + (beam + accent) * (HIGH_OPACITY - BASE_OPACITY))
     }
 
-    var body: some View {
+    public var body: some View {
         DotMatrixTriangleBase(props: props) { row, col, now, active in
             let phase = active ? cyclePhase(now: now, cycleMsBase: 1400, speed: 1, active: true) : 0.12
             return Self.opacityForCell(row, col, phase)

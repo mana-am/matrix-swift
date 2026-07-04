@@ -3,8 +3,30 @@ import SwiftUI
 /// Triangle 17 — a soft head traces an "∞": up the left rim to the apex, down the
 /// right rim, then cuts through (4,4)→center→(4,2). Cycle (1500ms).
 /// Mirrors `dotm-triangle-17.tsx`.
-struct DotmTriangle17: View {
+public struct DotmTriangle17: View {
     var props = DotMatrixCommonProps(size: 30, dotSize: 4, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmTriangle17 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let BASE_OPACITY = 0.06
     private static let HIGH_OPACITY = 0.95
@@ -27,7 +49,7 @@ struct DotmTriangle17: View {
         return BASE_OPACITY + g * (HIGH_OPACITY - BASE_OPACITY)
     }
 
-    var body: some View {
+    public var body: some View {
         DotMatrixTriangleBase(props: props) { row, col, now, active in
             let phase = active ? cyclePhase(now: now, cycleMsBase: 1500, speed: 1, active: true) : 0.12
             return Self.opacityForCell(row, col, phase)

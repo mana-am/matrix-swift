@@ -3,9 +3,31 @@ import SwiftUI
 /// 3×3 ripple echo — manhattan rings pulse with a parity-offset echo;
 /// `dmx-ripple-echo` keyframe, per-dot delay = (ring ×0.1 + parity ×0.02) ×cycle
 /// (`dmx-ripple-echo-3`, dur ×1.06). Mirrors `dotm-3x3-15.tsx` (speed 1.75).
-struct Dotm3x3_15: View {
+public struct Dotm3x3_15: View {
     var props = DotMatrixCommonProps(speed: 1.75, pattern: .full)
-    var body: some View {
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<Dotm3x3_15 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
+    public var body: some View {
         DotMatrix3Base(props: props, bypassOpacityRemap: true) { ctx, now in
             let t3 = dm3UserTriplet(props)
             let ring = max(0, min(2, ctx.manhattanDistance))

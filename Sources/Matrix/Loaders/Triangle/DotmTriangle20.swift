@@ -2,8 +2,30 @@ import SwiftUI
 
 /// Triangle 20 — two heads chase the perimeter half a lap apart, each with its own
 /// soft tail; the heart stays dim. Cycle (1800ms). Mirrors `dotm-triangle-20.tsx`.
-struct DotmTriangle20: View {
+public struct DotmTriangle20: View {
     var props = DotMatrixCommonProps(size: 30, dotSize: 4, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmTriangle20 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let BASE_OPACITY = 0.08
     private static let HIGH_OPACITY = 0.94
@@ -36,7 +58,7 @@ struct DotmTriangle20: View {
         return min(HIGH_OPACITY, max(a, b))
     }
 
-    var body: some View {
+    public var body: some View {
         DotMatrixTriangleBase(props: props) { row, col, now, active in
             let phase = active ? cyclePhase(now: now, cycleMsBase: 1800, speed: 1, active: true) : 0.1
             return Self.opacityForCell(row, col, phase)

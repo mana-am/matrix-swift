@@ -1,15 +1,37 @@
 import SwiftUI
 
 /// Checker shift with Braille bias on cols 1/3 and center bias.
-struct DotmCircular17: View {
+public struct DotmCircular17: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmCircular17 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
     /// Discrete checker frames per loop (must stay integer for `(row + col + t) % 2`).
     private static let CHECKER_STEPS: Int = 4
     private static let BASE_OPACITY: Double = 0.07
     private static let MID_OPACITY: Double = 0.34
     private static let HIGH_OPACITY: Double = 0.95
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props) { ctx, now in
             guard isWithinCircularMask(row: ctx.row, col: ctx.col) else { return 0 }
 

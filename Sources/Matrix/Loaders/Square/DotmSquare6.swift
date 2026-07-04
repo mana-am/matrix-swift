@@ -1,12 +1,34 @@
 import SwiftUI
 
 /// Column snake — `dmx-square6-col-snake` keyframe. Columns alternate up/down.
-struct DotmSquare6: View {
+public struct DotmSquare6: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmSquare6 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let COLUMN_HEIGHT = 5
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
             let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
             let midOp = props.opacityMid ?? DMKeyframes.DEFAULT_MID

@@ -4,8 +4,30 @@ import SwiftUI
 /// Mixed scale loader: idle / non-braille cells use source 0.08/0.26/0.12 scale (JS path);
 /// animated braille cells use CSS-class keyframe scale (0.16/0.32/1.0). Each path is
 /// remapped to the user opacity triplet inline so we can `bypassOpacityRemap: true`.
-struct DotmSquare9: View {
+public struct DotmSquare9: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmSquare9 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     // Braille bit constants (ISO/Unicode braille dot numbering)
     private static let D1: Int = 0x01
@@ -42,7 +64,7 @@ struct DotmSquare9: View {
         return nil
     }
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
             let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
             let peakOp = props.opacityPeak ?? DMKeyframes.DEFAULT_PEAK

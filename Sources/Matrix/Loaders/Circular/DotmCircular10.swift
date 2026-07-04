@@ -1,14 +1,36 @@
 import SwiftUI
 
 /// Modulo cell-code chase + parity gate.
-struct DotmCircular10: View {
+public struct DotmCircular10: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmCircular10 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
     private static let BASE: Double = 0.06
     private static let LOW: Double = 0.2
     private static let MID: Double = 0.48
     private static let HIGH: Double = 0.94
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props) { ctx, now in
             if !isWithinCircularMask(row: ctx.row, col: ctx.col) { return 0 }
             let phase = cyclePhase(now: now, cycleMsBase: 1600, speed: 1,

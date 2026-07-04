@@ -3,9 +3,31 @@ import SwiftUI
 /// 3×3 spiral-snake — head sweeps the inward spiral order; `dmx-spiral-snake`
 /// keyframe with per-dot delay = spiralOrder ×0.038 ×cycle (`dmx-spiral-snake-3`,
 /// dur ×0.78). Mirrors `dotm-3x3-1.tsx`.
-struct Dotm3x3_1: View {
+public struct Dotm3x3_1: View {
     var props = DotMatrixCommonProps(speed: 1.15, pattern: .full)
-    var body: some View {
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<Dotm3x3_1 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
+    public var body: some View {
         DotMatrix3Base(props: props, bypassOpacityRemap: true) { ctx, now in
             let t3 = dm3UserTriplet(props)
             let order = DotMatrix3GridPaths.spiralInwardOrderValue(ctx.index)

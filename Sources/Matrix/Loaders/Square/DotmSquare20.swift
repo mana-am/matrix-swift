@@ -1,8 +1,30 @@
 import SwiftUI
 
 /// 16-cell perimeter Möbius chase + back-tail + seam pulse, 1600ms.
-struct DotmSquare20: View {
+public struct DotmSquare20: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmSquare20 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let TAIL_BRIGHT: [Double] = [1, 0.82, 0.64, 0.46, 0.3, 0.18]
     private static let BACK_TAIL_BRIGHT: [Double] = [0.38, 0.3, 0.22, 0.14]
@@ -33,7 +55,7 @@ struct DotmSquare20: View {
         return tail[distance]
     }
 
-    var body: some View {
+    public var body: some View {
         let loopLen = Self.LOOP_LEN
         DotMatrixBase(props: props) { ctx, now in
             let onLoop = Self.PERIMETER_PATH.firstIndex(of: ctx.index) ?? -1

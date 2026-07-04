@@ -4,8 +4,30 @@ import SwiftUI
 /// rails) that hold then morph into one another with a staggered smoothstep and
 /// a breathing pulse during the hold. Fully JS-computed opacity (remapped).
 /// Mirrors `dotm-3x3-11.tsx` (cycle 2700ms, speed 1.25).
-struct Dotm3x3_11: View {
+public struct Dotm3x3_11: View {
     var props = DotMatrixCommonProps(speed: 1.25, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<Dotm3x3_11 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let BASE_OPACITY = 0.06
     private static let PEAK_OPACITY = 0.88
@@ -40,7 +62,7 @@ struct Dotm3x3_11: View {
         return smoothstep(localPhase)
     }
 
-    var body: some View {
+    public var body: some View {
         DotMatrix3Base(props: props) { ctx, now in
             let active = ctx.phase != .idle && !ctx.reducedMotion
             let phase = cyclePhase(now: now, cycleMsBase: Self.CYCLE_MS_BASE, speed: 1, active: active)

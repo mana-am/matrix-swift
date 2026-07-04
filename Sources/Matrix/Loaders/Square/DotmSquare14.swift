@@ -1,8 +1,30 @@
 import SwiftUI
 
 /// 4 geometric masks with stepped cycle. Sequence: [0,1,2,3,2,1], 1700ms.
-struct DotmSquare14: View {
+public struct DotmSquare14: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmSquare14 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let BASE_OPACITY: Double = 0.08
     private static let MID_OPACITY: Double = 0.52
@@ -17,7 +39,7 @@ struct DotmSquare14: View {
 
     private static let FRAME_SEQUENCE: [Int] = [0, 1, 2, 3, 2, 1]
 
-    var body: some View {
+    public var body: some View {
         let seqLen = Self.FRAME_SEQUENCE.count
         DotMatrixBase(props: props) { ctx, now in
             let step = steppedCycle(now: now, cycleMsBase: 1700, steps: seqLen, speed: 1, active: ctx.phase != .idle && !ctx.reducedMotion)

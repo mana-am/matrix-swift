@@ -3,8 +3,30 @@ import SwiftUI
 /// Glyph Cycle — 4-frame keyframe table: hex outline, midline burst, equator
 /// pulse, vertex parity. Each cell is one of `x` (high) / `o` (mid) / unset
 /// (base). Mirrors upstream `dotm-hex-7.tsx`.
-struct DotmHex7: View {
+public struct DotmHex7: View {
     var props = DotMatrixCommonProps(speed: 1.9, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmHex7 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let baseOp: Double = 0.20
     private static let midOp: Double = 0.32
@@ -63,7 +85,7 @@ struct DotmHex7: View {
         ]
     }()
 
-    var body: some View {
+    public var body: some View {
         DotMatrixHexBase(props: props, timing: .stepped(steps: Self.frames.count, cycleMsBase: 1520)) {
             row, col, stepValue in
             let step = max(0, min(Self.frames.count - 1, Int(stepValue)))

@@ -3,8 +3,30 @@ import SwiftUI
 /// Triangle 3 — a rotating radar beam sweeps the silhouette with a soft trailing
 /// glow and an ambient pulse. Stepped cycle (36 steps, 1650ms).
 /// Mirrors `dotm-triangle-3.tsx`.
-struct DotmTriangle3: View {
+public struct DotmTriangle3: View {
     var props = DotMatrixCommonProps(size: 30, dotSize: 4, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmTriangle3 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let STEP_COUNT = 36
     private static let BASE_OPACITY = 0.03
@@ -12,7 +34,7 @@ struct DotmTriangle3: View {
     private static let HIGH_OPACITY = 0.94
     private static let FAR_OPACITY = 0.15
 
-    var body: some View {
+    public var body: some View {
         DotMatrixTriangleBase(props: props) { row, col, now, active in
             let frame = steppedCycle(
                 now: now, cycleMsBase: 1650, steps: Self.STEP_COUNT, speed: 1, active: active)

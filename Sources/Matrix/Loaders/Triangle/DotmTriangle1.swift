@@ -3,8 +3,30 @@ import SwiftUI
 /// Triangle 1 — a head chases the triangle perimeter with a 5-level fading tail
 /// while the apex-center holds a soft glow. Stepped cycle (30 steps, 1650ms).
 /// Mirrors `dotm-triangle-1.tsx`.
-struct DotmTriangle1: View {
+public struct DotmTriangle1: View {
     var props = DotMatrixCommonProps(size: 30, dotSize: 4, pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmTriangle1 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let STEP_COUNT = 30
     private static let BASE_OPACITY = 0.08
@@ -14,7 +36,7 @@ struct DotmTriangle1: View {
         (1, 3), (2, 2), (3, 1), (4, 0), (4, 2), (4, 4), (4, 6), (3, 5), (2, 4),
     ]
 
-    var body: some View {
+    public var body: some View {
         DotMatrixTriangleBase(props: props) { row, col, now, active in
             let frame = steppedCycle(
                 now: now, cycleMsBase: 1650, steps: Self.STEP_COUNT, speed: 1, active: active)

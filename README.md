@@ -36,7 +36,9 @@ Then add `Matrix` to your target's dependencies and `import Matrix`.
 
 ## Quick start
 
-Pick a loader by **shape + index**, then size and color it:
+There are two equivalent ways to use a loader — pick whichever reads better.
+
+**1. Named component** (1:1 with the upstream React library — `<DotmSquare3 />`):
 
 ```swift
 import SwiftUI
@@ -45,20 +47,39 @@ import Matrix
 struct LoadingRow: View {
     var body: some View {
         HStack(spacing: 16) {
-            MatrixLoader(.square(3), size: 28)
-            MatrixLoader(.hex(1), size: 28, color: .blue)
-            MatrixLoader(.triangle(5), size: 28, color: .pink, speed: 1.4)
-            MatrixLoader(.fun(.heart), size: 28, color: .red)
-            MatrixLoader(.icon, size: 28)
+            DotmSquare3(size: 28)
+            DotmHex1(size: 28, color: .blue)
+            DotmTriangle5(size: 28, color: .pink, speed: 1.4)
+            DotMatrixIcon(size: 28)
         }
     }
 }
 ```
 
+Every loader is its own `View`: `DotmSquare1…23`, `DotmCircular1…20`, `DotmHex1…10`,
+`DotmTriangle1…20`, `Dotm3x3_1…21`, the Fun set (`DotmFunHeart`, `DotmFunArrow`,
+`DotmFunSparkle`, …), and `DotMatrixIcon`. Each takes the same ergonomic init:
+`(size:color:speed:dotSize:muted:bloom:halo:)`.
+
+**2. Shape id** (one view, parameterized — handy for pickers / random / storing a choice):
+
+```swift
+MatrixLoader(.square(3), size: 28)
+MatrixLoader(.hex(1), size: 28, color: .blue)
+MatrixLoader(.triangle(5), size: 28, color: .pink, speed: 1.4)
+MatrixLoader(.fun(.heart), size: 28, color: .red)
+MatrixLoader(.icon, size: 28)
+```
+
 Index ranges: `square` 1…23 · `circular` 1…20 · `hex` 1…10 · `grid3` 1…16 & 18…21
 · `triangle` 1…20 · `fun(.heart / .arrow / .sparkle / …)` · `icon`. Every id is
-enumerable via `MatrixLoaderID.all` — handy for building a picker or choosing one
-at random.
+enumerable via `MatrixLoaderID.all` — build a picker or choose one at random.
+
+> **Coming from [`zzzzshawn/matrix`](https://github.com/zzzzshawn/matrix)?** The named
+> components match the upstream exports 1:1 (`DotmSquare3`, `DotmHex1`, `Dotm3x3_7`,
+> `DotmTriangle5`, `DotMatrixIcon`), so docs and examples carry over. The **Fun**
+> family (`DotmFun…` / `MatrixLoader(.fun(…))`) is an addition in this port and has no
+> upstream counterpart.
 
 ## Example
 
@@ -103,8 +124,12 @@ loader is browsable in `MatrixLoaderGallery`.
 
 ## Public API
 
-- `MatrixLoader` — render a specific loader by `MatrixLoaderID` (shape + index),
-  sized and colored to taste.
+- **Named components** — `DotmSquare1…23`, `DotmCircular1…20`, `DotmHex1…10`,
+  `DotmTriangle1…20`, `Dotm3x3_1…21`, `DotmFun…`, `DotMatrixIcon`. Each is a `View`
+  with an ergonomic `(size:color:speed:dotSize:muted:bloom:halo:)` init. This mirrors
+  the upstream React library's per-component API.
+- `MatrixLoader` — render a loader by `MatrixLoaderID` (shape + index), sized and
+  colored to taste. Equivalent to the named components; nicer when the choice is data.
 - `MatrixLoaderID` / `FunLoader` — the loader catalog; `MatrixLoaderID.all`
   enumerates every loader.
 - `MatrixLoaderGallery` — the interactive showcase (bottom tab bar per family).

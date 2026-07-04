@@ -3,14 +3,36 @@ import SwiftUI
 /// One cell pops first, then neighbors fire with delay proportional to Manhattan distance,
 /// like confetti expanding from an explosion. The "center" cycles through 4 corners over
 /// time so each cycle looks different.
-struct DotmFunConfetti: View {
+public struct DotmFunConfetti: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmFunConfetti size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     /// Four origin points the confetti rotates through.
     private static let ORIGINS: [(Int, Int)] = [(0, 0), (0, 4), (4, 4), (4, 0)]
     private static let CYCLE_SEC: Double = 1.6
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
             let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
             let midOp = props.opacityMid ?? DMKeyframes.DEFAULT_MID

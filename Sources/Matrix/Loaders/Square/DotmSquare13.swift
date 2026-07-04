@@ -1,8 +1,30 @@
 import SwiftUI
 
 /// 8 compass-direction masks (N/NE/E/SE/S/SW/W/NW), each shown twice (16 steps), 1550ms.
-struct DotmSquare13: View {
+public struct DotmSquare13: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmSquare13 size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
 
     private static let BASE_OPACITY: Double = 0.08
     private static let ON_OPACITY: Double = 0.56
@@ -21,7 +43,7 @@ struct DotmSquare13: View {
 
     private static let FRAME_SEQUENCE: [Int] = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7]
 
-    var body: some View {
+    public var body: some View {
         let seqLen = Self.FRAME_SEQUENCE.count
         DotMatrixBase(props: props) { ctx, now in
             let step = steppedCycle(now: now, cycleMsBase: 1550, steps: seqLen, speed: 1, active: ctx.phase != .idle && !ctx.reducedMotion)

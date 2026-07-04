@@ -3,12 +3,34 @@ import SwiftUI
 /// A bright "cursor" dot moves through the grid following a Lissajous curve, leaving a
 /// short opacity tail behind it. Most "alive" of the loaders — the cursor never lands on
 /// the same cell twice in a row.
-struct DotmFunCursor: View {
+public struct DotmFunCursor: View {
     var props = DotMatrixCommonProps(pattern: .full)
+    init(props: DotMatrixCommonProps) { self.props = props }
+
+    /// Source-parity ergonomic init — mirrors `<DotmFunCursor size=… />` upstream. The
+    /// loader's shape/pattern is fixed; you size and color it.
+    public init(
+        size: CGFloat = 24,
+        color: Color = .primary,
+        speed: Double = 1,
+        dotSize: CGFloat? = nil,
+        muted: Bool = false,
+        bloom: Bool = false,
+        halo: Double = 0
+    ) {
+        props.size = size
+        props.color = color
+        props.speed = speed
+        props.dotSize = dotSize ?? max(2, floor(size / 6))
+        props.muted = muted
+        props.bloom = bloom
+        props.halo = halo
+    }
+
     private static let CYCLE_SEC: Double = 3.5
     private static let TAIL_RADIUS: Double = 1.6  // cells
 
-    var body: some View {
+    public var body: some View {
         DotMatrixBase(props: props, bypassOpacityRemap: true) { ctx, now in
             let baseOp = props.opacityBase ?? DMKeyframes.DEFAULT_BASE
             let peakOp = props.opacityPeak ?? DMKeyframes.DEFAULT_PEAK
