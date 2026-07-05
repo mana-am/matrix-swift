@@ -13,7 +13,7 @@ an AI-first creation studio for iOS.
 </p>
 
 <p align="center">
-  <video src="https://github.com/user-attachments/assets/eecb7f30-a9e4-4af2-ab0d-b70d75a0ee0a" width="480"></video>
+  <video src="https://github.com/mana-am/matrix-swift/raw/main/Assets/demo.mp4" width="280"></video>
 </p>
 
 ## When to use
