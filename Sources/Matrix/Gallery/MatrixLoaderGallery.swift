@@ -116,8 +116,10 @@ public struct MatrixLoaderGallery: View {
             categoryChipBar
         }
         .navigationTitle(category.label)
-        .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(theme.scheme)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     /// Bottom chip bar that switches loader families. A horizontal row of Liquid-Glass
@@ -137,7 +139,7 @@ public struct MatrixLoaderGallery: View {
 
     @ViewBuilder
     private var chipRow: some View {
-        if #available(iOS 26.0, *) {
+        if #available(iOS 26.0, macOS 26.0, watchOS 9.0, tvOS 13.0, *) {
             GlassEffectContainer(spacing: 8) {
                 HStack(spacing: 8) {
                     ForEach(Category.allCases) { chip(for: $0) }
@@ -431,7 +433,11 @@ public struct MatrixLoaderGallery: View {
         VStack(spacing: 6) {
             ZStack {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    #if os(iOS)
                     .fill(Color(.tertiarySystemBackground))
+                    #elseif os(macOS)
+                    .fill(Color(.windowBackgroundColor))
+                    #endif
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
                 content()
@@ -466,7 +472,7 @@ public struct MatrixLoaderGallery: View {
 private struct GlassChipStyle: ViewModifier {
     let selected: Bool
     func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
+        if #available(iOS 26.0, macOS 26.0, *) {
             content.glassEffect(selected ? .regular.tint(.accentColor) : .regular, in: .capsule)
         } else {
             content.background(

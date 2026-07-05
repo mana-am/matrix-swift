@@ -78,7 +78,7 @@ public struct MatrixLoadingView<Key: Hashable>: View {
         phase: ChatLoadingPhase,
         stageKey: Key,
         useRandomColor: Bool,
-        fallbackColor: Color = Color(.secondaryLabel)
+        fallbackColor: Color = .osFallbackColorDefault
     ) {
         self.size = size
         self.phase = phase
@@ -238,5 +238,15 @@ private struct InternalView: View {
                 halo: haloLevel
             )
         }
+    }
+}
+
+extension Color {
+    public static var osFallbackColorDefault: Color {
+        #if os(iOS)
+        .secondaryLabel
+        #elseif os(macOS)
+        .secondary
+        #endif
     }
 }
