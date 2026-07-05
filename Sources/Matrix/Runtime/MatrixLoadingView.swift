@@ -244,7 +244,7 @@ private struct InternalView: View {
 extension Color {
     public static var osFallbackColorDefault: Color {
         #if os(iOS)
-        .secondaryLabel
+        Color(uiColor: .secondaryLabel)
         #elseif os(macOS)
         .secondary
         #endif
