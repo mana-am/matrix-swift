@@ -13,7 +13,7 @@ an AI-first creation studio for iOS.
 </p>
 
 <p align="center">
-  <video src="https://github.com/mana-am/matrix-swift/raw/main/Assets/demo.mp4" width="280"></video>
+  <img src="https://github.com/mana-am/matrix-swift/raw/main/Assets/demo.gif" width="280" alt="Matrix dot-matrix loaders demo" />
 </p>
 
 ## When to use
