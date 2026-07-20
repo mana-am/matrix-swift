@@ -6,7 +6,7 @@ import SwiftUI
 enum DotMatrixBloom {
 
     /// Remapped opacity threshold above which a cell starts glowing.
-    static let bloomMin: Double = 0.6
+    static let bloomMin: Double = 0.52
 
     /// `0…1` bloom level for a remapped opacity. Linear ramp from `bloomMin`
     /// (level 0, glow just appears) to 1.0 (level 1, full glow).
@@ -60,15 +60,18 @@ extension View {
         if level <= 0 {
             self
         } else {
-            // Two stacked shadows: a tight inner glow that gives the dot
-            // brightness, and a wider outer falloff that gives it softness.
-            // Tuned at chat scale (dot ≤ 4pt) — values match the visual
-            // weight of upstream's CSS `drop-shadow` stack within rounding.
-            let inner = dotSize * (wide ? 0.95 : 0.7)
-            let outer = dotSize * (wide ? 1.7 : 1.15)
+            // A hot center plus three falloff bands makes peak dots read like
+            // luminous LEDs rather than flat colored circles. The outer band
+            // stays low-alpha so it can extend beyond an 18pt chat slot without
+            // washing out the adjacent label.
+            let inner = dotSize * (wide ? 0.75 : 0.55)
+            let middle = dotSize * (wide ? 1.45 : 1.0)
+            let outer = dotSize * (wide ? 2.2 : 1.55)
             self
-                .shadow(color: color.opacity(0.55 * level), radius: inner)
-                .shadow(color: color.opacity(0.32 * level), radius: outer)
+                .brightness(0.16 * level)
+                .shadow(color: color.opacity(0.78 * level), radius: inner)
+                .shadow(color: color.opacity(0.44 * level), radius: middle)
+                .shadow(color: color.opacity(0.18 * level), radius: outer)
         }
     }
 }

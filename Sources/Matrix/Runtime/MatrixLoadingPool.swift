@@ -19,12 +19,10 @@ struct LoaderEntry {
     let kind: Kind
 }
 
-/// All 92 loaders that can render in chat loading slots, plus a deterministic
-/// `pick(seed:)` selector. The pool is exhaustive (matches the Debug Gallery)
-/// so every loader gets a chance to appear in chat — per the user's "use all"
-/// decision. The Triangle family (20 loaders) is intentionally **not** pooled —
-/// it's translated for parity with upstream but unused in Mana iOS, visible only
-/// in the Debug Gallery.
+/// The 72 loaders that can render in chat loading slots, plus a deterministic
+/// `pick(seed:)` selector. Triangle and Grid3 remain available to explicit
+/// `MatrixLoader` / Debug Gallery call sites, but are intentionally excluded
+/// from Mana chat's random pool.
 enum MatrixLoadingPool {
     static let all: [LoaderEntry] = [
         // MARK: Square (23) — all shape-agnostic
@@ -110,8 +108,13 @@ enum MatrixLoadingPool {
         .init(id: "Hex9",   kind: .props(.full, { AnyView(DotmHex9(props: $0))  })),
         .init(id: "Hex10",  kind: .props(.full, { AnyView(DotmHex10(props: $0)) })),
 
-        // MARK: Grid3 (20) — 3×3 grid; pattern unused (the 3×3 base owns its own
-        // layout), so we pass `.full` as a no-op to satisfy the `LoaderEntry` shape.
+        // MARK: Icon (1)
+        .init(id: "Icon",      kind: .icon),
+    ]
+
+    /// Explicit-only 3×3 catalog. These entries remain addressable through
+    /// `MatrixLoader(.grid3(...))`, but `pick(seed:)` never selects them for chat.
+    private static let grid3Catalog: [LoaderEntry] = [
         .init(id: "G3-1",  kind: .props(.full, { AnyView(Dotm3x3_1(props: $0))  })),
         .init(id: "G3-2",  kind: .props(.full, { AnyView(Dotm3x3_2(props: $0))  })),
         .init(id: "G3-3",  kind: .props(.full, { AnyView(Dotm3x3_3(props: $0))  })),
@@ -132,9 +135,6 @@ enum MatrixLoadingPool {
         .init(id: "G3-19", kind: .props(.full, { AnyView(Dotm3x3_19(props: $0)) })),
         .init(id: "G3-20", kind: .props(.full, { AnyView(Dotm3x3_20(props: $0)) })),
         .init(id: "G3-21", kind: .props(.full, { AnyView(Dotm3x3_21(props: $0)) })),
-
-        // MARK: Icon (1)
-        .init(id: "Icon",      kind: .icon),
     ]
 
     /// Deterministic pick — same seed always returns the same loader. The seed is
@@ -150,6 +150,7 @@ enum MatrixLoadingPool {
     /// Look up an entry by its stable id (e.g. `"S3"`, `"Hex1"`, `"G3-16"`).
     /// Used by `MatrixLoader` to resolve a `MatrixLoaderID` to its builder.
     static func entry(id: String) -> LoaderEntry? {
-        all.first { $0.id == id }
+        all.first(where: { $0.id == id })
+            ?? grid3Catalog.first(where: { $0.id == id })
     }
 }

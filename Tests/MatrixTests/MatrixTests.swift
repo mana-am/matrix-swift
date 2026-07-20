@@ -3,10 +3,15 @@ import XCTest
 @testable import Matrix
 
 final class MatrixTests: XCTestCase {
-    /// The chat loader pool is exhaustive: Square 23 + Circular 20 + Fun 18 +
-    /// Hex 10 + Grid3 20 + Icon 1 = 92. Triangle (20) is intentionally excluded.
+    /// Chat uses Square 23 + Circular 20 + Fun 18 + Hex 10 + Icon 1 = 72.
+    /// Triangle and Grid3 remain explicit-only families.
     func testPoolCount() {
-        XCTAssertEqual(MatrixLoadingPool.all.count, 92)
+        XCTAssertEqual(MatrixLoadingPool.all.count, 72)
+        XCTAssertFalse(MatrixLoadingPool.all.contains { $0.id.hasPrefix("G3-") })
+    }
+
+    func testLoadingIntensityPresetsAreDistinct() {
+        XCTAssertNotEqual(MatrixLoadingIntensity.standard, .vivid)
     }
 
     /// Loader ids are unique — a duplicate would bias the deterministic picker.

@@ -111,8 +111,9 @@ NavigationLink("Loaders") { MatrixLoaderGallery() }
 | Triangle  | 20    | 7×7 triangle silhouette |
 | Icon      | 1     | brand icon loader |
 
-`MatrixLoadingView` draws from a pool of 92 (every family except Triangle). Any
-loader is browsable in `MatrixLoaderGallery`.
+`MatrixLoadingView` draws from a pool of 72. Triangle and 3×3 loaders remain
+available for explicit selection and in `MatrixLoaderGallery`, but are excluded
+from the random runtime pool.
 
 ## How it works
 
@@ -132,6 +133,9 @@ loader is browsable in `MatrixLoaderGallery`.
   the upstream React library's per-component API.
 - `MatrixLoader` — render a loader by `MatrixLoaderID` (shape + index), sized and
   colored to taste. Equivalent to the named components; nicer when the choice is data.
+- `MatrixLoadingView` — deterministic runtime loader with a semantic
+  `MatrixLoadingIntensity`: `.standard` preserves the restrained default, while
+  `.vivid` enables denser dots and layered bloom for high-contrast status surfaces.
 - `MatrixLoaderID` / `FunLoader` — the loader catalog; `MatrixLoaderID.all`
   enumerates every loader.
 - `MatrixLoaderGallery` — the interactive showcase (Liquid-Glass chip bar per family).

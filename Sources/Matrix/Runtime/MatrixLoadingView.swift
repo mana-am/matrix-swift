@@ -40,6 +40,59 @@ extension View {
     }
 }
 
+/// Visual energy used by ``MatrixLoadingView``.
+///
+/// ``standard`` preserves the package's restrained default. ``vivid`` uses
+/// denser dots, brighter animation levels, and a layered bloom intended for
+/// high-contrast status surfaces.
+public enum MatrixLoadingIntensity: Hashable, Sendable {
+    case standard
+    case vivid
+}
+
+private struct MatrixLoadingAppearance {
+    let dotDensityDivisor: CGFloat
+    let fixedCellPadding: CGFloat?
+    let minimumCellPadding: CGFloat
+    let inactiveDotOpacity: Double
+    let opacityBase: Double?
+    let opacityMid: Double?
+    let opacityPeak: Double?
+    let ambientHalo: Double
+    let bloom: Bool
+}
+
+private extension MatrixLoadingIntensity {
+    var appearance: MatrixLoadingAppearance {
+        switch self {
+        case .standard:
+            MatrixLoadingAppearance(
+                dotDensityDivisor: 6,
+                fixedCellPadding: 1,
+                minimumCellPadding: 1,
+                inactiveDotOpacity: 0.06,
+                opacityBase: nil,
+                opacityMid: nil,
+                opacityPeak: nil,
+                ambientHalo: 0.15,
+                bloom: false
+            )
+        case .vivid:
+            MatrixLoadingAppearance(
+                dotDensityDivisor: 5.5,
+                fixedCellPadding: nil,
+                minimumCellPadding: 0.5,
+                inactiveDotOpacity: 0.13,
+                opacityBase: 0.20,
+                opacityMid: 0.48,
+                opacityPeak: 1.00,
+                ambientHalo: 0.18,
+                bloom: true
+            )
+        }
+    }
+}
+
 /// Drop-in replacement for the legacy `Pixel(...)` loading view. Picks a loader
 /// from `MatrixLoadingPool` and a coordinated random color from the same seed,
 /// then runs the loader at a speed that reflects the current chat phase.
@@ -68,6 +121,7 @@ public struct MatrixLoadingView<Key: Hashable>: View {
     let phase: ChatLoadingPhase
     let stageKey: Key
     let useRandomColor: Bool
+    let intensity: MatrixLoadingIntensity
     var fallbackColor: Color
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -78,12 +132,14 @@ public struct MatrixLoadingView<Key: Hashable>: View {
         phase: ChatLoadingPhase,
         stageKey: Key,
         useRandomColor: Bool,
+        intensity: MatrixLoadingIntensity = .standard,
         fallbackColor: Color = .osFallbackColorDefault
     ) {
         self.size = size
         self.phase = phase
         self.stageKey = stageKey
         self.useRandomColor = useRandomColor
+        self.intensity = intensity
         self.fallbackColor = fallbackColor
     }
 
@@ -117,6 +173,7 @@ public struct MatrixLoadingView<Key: Hashable>: View {
                 size: size,
                 phase: phase,
                 useRandomColor: useRandomColor,
+                intensity: intensity,
                 fallbackColor: fallbackColor,
                 seed: seed
             )
@@ -179,17 +236,21 @@ private struct InternalView: View {
     let size: CGFloat
     let phase: ChatLoadingPhase
     let useRandomColor: Bool
+    let intensity: MatrixLoadingIntensity
     let fallbackColor: Color
     let seed: Int
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private enum Layout {
+        static let gridDimension: CGFloat = 5
+        static let minimumDotSize: CGFloat = 2
+    }
+
     var body: some View {
-        // Reduce Motion: DotMatrixBase already pauses TimelineView. Static
-        // dots + low-saturation pastel are essentially invisible, so force
-        // the fallback color (theme-adaptive `Color(.secondaryLabel)`) for
-        // accessibility-correct contrast.
+        // Reduce Motion: DotMatrixBase already pauses TimelineView. Use the
+        // theme-adaptive fallback rather than leaving a static status-like hue.
         let effectiveUseRandom = reduceMotion ? false : useRandomColor
 
         let entry = MatrixLoadingPool.pick(seed: seed)
@@ -200,18 +261,23 @@ private struct InternalView: View {
             colorScheme: colorScheme
         )
         let speed = phase.speedMultiplier
-        // 5×5 grid sized to mirror the gallery's chatProps5 sizing rule:
-        // dotSize = max(2, floor(size/6)); cellPadding = 1; matrixSpan = dot*5+4.
-        let dot = max(2, floor(size / 6))
-        let span = dot * 5 + 4
+        let appearance = intensity.appearance
+        let dot = max(
+            Layout.minimumDotSize,
+            floor(size / appearance.dotDensityDivisor)
+        )
+        let cellPadding = appearance.fixedCellPadding ?? max(
+            appearance.minimumCellPadding,
+            (size - dot * Layout.gridDimension) / (Layout.gridDimension - 1)
+        )
+        let span = dot * Layout.gridDimension
+            + cellPadding * (Layout.gridDimension - 1)
 
-        // Subtle halo gives every active dot a faint glow. Reduce Motion
-        // skips it (the static dots don't need haloing, and the wide falloff
-        // would be visually noisy without animation to mask it). Halo is
-        // intentionally tuned low — at chat scale (dot ≤ 4pt) the wider
-        // falloff is what reads, not the inner ring; values above ~0.2 start
-        // bleeding into adjacent text.
-        let haloLevel: Double = reduceMotion ? 0 : 0.15
+        // A quiet ambient halo keeps the silhouette legible; `bloom: true`
+        // then lets only peak-opacity dots flare to full strength. This creates
+        // the bright moving head + soft tail visible in the reference loaders.
+        let haloLevel: Double = reduceMotion ? 0 : appearance.ambientHalo
+        let bloomEnabled = appearance.bloom && !reduceMotion
 
         switch entry.kind {
         case .props(let pattern, let build):
@@ -221,9 +287,13 @@ private struct InternalView: View {
                 color: color,
                 speed: speed,
                 pattern: pattern,
-                cellPadding: 1,
+                opacityBase: appearance.opacityBase,
+                opacityMid: appearance.opacityMid,
+                opacityPeak: appearance.opacityPeak,
+                cellPadding: cellPadding,
                 showInactiveDots: true,
-                inactiveDotOpacity: 0.06,
+                inactiveDotOpacity: appearance.inactiveDotOpacity,
+                bloom: bloomEnabled,
                 halo: haloLevel
             )
             build(props)
@@ -233,9 +303,14 @@ private struct InternalView: View {
                 dotSize: dot,
                 color: color,
                 speed: speed,
-                cellPadding: 1,
+                cellPadding: cellPadding,
                 showInactiveDots: true,
-                halo: haloLevel
+                inactiveDotOpacity: appearance.inactiveDotOpacity,
+                halo: haloLevel,
+                bloom: bloomEnabled,
+                opacityBase: appearance.opacityBase,
+                opacityMid: appearance.opacityMid,
+                opacityPeak: appearance.opacityPeak
             )
         }
     }

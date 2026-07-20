@@ -20,7 +20,10 @@ public struct DotMatrixIcon: View {
         showInactiveDots: Bool = false,
         inactiveDotOpacity: Double = 0.06,
         halo: Double = 0,
-        bloom: Bool = false
+        bloom: Bool = false,
+        opacityBase: Double? = nil,
+        opacityMid: Double? = nil,
+        opacityPeak: Double? = nil
     ) {
         self.props = DotMatrixCommonProps(
             size: size,
@@ -30,6 +33,9 @@ public struct DotMatrixIcon: View {
             pattern: .diamond,
             muted: muted,
             animated: animated,
+            opacityBase: opacityBase,
+            opacityMid: opacityMid,
+            opacityPeak: opacityPeak,
             cellPadding: cellPadding,
             showInactiveDots: showInactiveDots,
             inactiveDotOpacity: inactiveDotOpacity,
