@@ -18,6 +18,22 @@ struct DotMatrixBase: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Frame-rate ceiling for the animation clock.
+    ///
+    /// A bare `.animation` schedule follows the display link, so on a ProMotion
+    /// device this body ran 120×/s — and one pass is not cheap: it rebuilds all
+    /// 25 cells, and every cell above the bloom threshold carries three
+    /// `.shadow` layers plus a `.brightness` filter, each of which CoreAnimation
+    /// rasterizes into the layer's backing store on the CPU. An Instruments
+    /// trace of a host app put ~8% of ALL main-thread time in
+    /// `CABackingStoreUpdate_`, with its per-second distribution matching this
+    /// view's lifetime exactly.
+    ///
+    /// The loaders animate slow opacity pulses, so capping the clock at 30fps
+    /// is not visible — but on a 120Hz display it removes three quarters of
+    /// that redraw cost. Devices at 60Hz are unaffected below their own rate.
+    private static let frameInterval: TimeInterval = 1.0 / 30.0
+
     var body: some View {
         let safeSpeed = props.speed > 0 ? props.speed : 1
         let layout = matrix5Layout(
@@ -28,7 +44,9 @@ struct DotMatrixBase: View {
         let phase = resolveMatrixPhase(animated: props.animated, reducedMotion: reduceMotion)
         let mask = DotMatrixPatterns.mask(for: props.pattern)
 
-        let matrix = TimelineView(.animation(paused: phase == .idle)) { context in
+        let matrix = TimelineView(
+            .animation(minimumInterval: Self.frameInterval, paused: phase == .idle)
+        ) { context in
             let now = context.date.timeIntervalSinceReferenceDate * safeSpeed
             VStack(spacing: layout.gap) {
                 ForEach(0..<MATRIX_SIZE, id: \.self) { row in
