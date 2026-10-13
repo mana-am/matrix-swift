@@ -32,8 +32,14 @@ struct DotMatrixHexBase: View {
         let phaseState = resolveMatrixPhase(animated: props.animated, reducedMotion: reduceMotion)
         let isPaused = phaseState == .idle
 
-        let matrix = TimelineView(.animation(paused: isPaused)) { context in
-            let now = context.date.timeIntervalSinceReferenceDate * safeSpeed
+        let matrix = DotField(
+            canvasSize: CGSize(width: layout.matrixWidth, height: layout.matrixHeight),
+            dotSize: props.dotSize,
+            color: props.color,
+            wideBloom: DotMatrixBloom.clampHalo(props.halo) > 0,
+            paused: isPaused
+        ) { wallClock in
+            let now = wallClock * safeSpeed
             let phaseValue: Double = {
                 guard !isPaused else { return idlePhase() }
                 switch timing {
@@ -44,17 +50,7 @@ struct DotMatrixHexBase: View {
                     return Double(Int(floor(p * Double(steps))) % max(1, steps))
                 }
             }()
-
-            VStack(spacing: layout.rowGap) {
-                ForEach(0..<HEX_ROWS, id: \.self) { row in
-                    HStack(spacing: layout.colGap) {
-                        ForEach(0..<HEX_ROW_COUNTS[row], id: \.self) { col in
-                            cell(row: row, col: col, phaseValue: phaseValue)
-                        }
-                    }
-                }
-            }
-            .frame(width: layout.matrixWidth, height: layout.matrixHeight)
+            return cells(layout: layout, phaseValue: phaseValue)
         }
 
         Group {
@@ -76,8 +72,26 @@ struct DotMatrixHexBase: View {
         )
     }
 
-    @ViewBuilder
-    private func cell(row: Int, col: Int, phaseValue: Double) -> some View {
+    /// One tick of the lattice, laid out exactly as the old `VStack` of
+    /// centered `HStack` rows placed it.
+    private func cells(layout: HexLayout, phaseValue: Double) -> [DotFieldCell] {
+        let dot = props.dotSize
+        var cells: [DotFieldCell] = []
+        cells.reserveCapacity(HEX_ROW_COUNTS.reduce(0, +))
+        for row in 0..<HEX_ROWS {
+            let count = HEX_ROW_COUNTS[row]
+            let rowWidth = dot * CGFloat(count) + layout.colGap * CGFloat(count - 1)
+            let left = (layout.matrixWidth - rowWidth) / 2 + dot / 2
+            let y = CGFloat(row) * (dot + layout.rowGap) + dot / 2
+            for col in 0..<count {
+                let center = CGPoint(x: left + CGFloat(col) * (dot + layout.colGap), y: y)
+                cells.append(cell(row: row, col: col, center: center, phaseValue: phaseValue))
+            }
+        }
+        return cells
+    }
+
+    private func cell(row: Int, col: Int, center: CGPoint, phaseValue: Double) -> DotFieldCell {
         let raw = resolver(row, col, phaseValue)
         let remapped = remapOpacityToTriplet(
             raw, base: props.opacityBase, mid: props.opacityMid, peak: props.opacityPeak
@@ -86,16 +100,7 @@ struct DotMatrixHexBase: View {
         let level = DotMatrixBloom.level(
             remappedOpacity: remapped, bloom: props.bloom, halo: props.halo
         )
-        Circle()
-            .fill(props.color)
-            .frame(width: props.dotSize, height: props.dotSize)
-            .opacity(display)
-            .dotMatrixBloom(
-                level: level,
-                color: props.color,
-                dotSize: props.dotSize,
-                wide: DotMatrixBloom.clampHalo(props.halo) > 0
-            )
+        return DotFieldCell(center: center, opacity: display, bloom: level)
     }
 
     private func idlePhase() -> Double {

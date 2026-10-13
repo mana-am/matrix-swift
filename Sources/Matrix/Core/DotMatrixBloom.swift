@@ -41,6 +41,16 @@ enum DotMatrixBloom {
         let b = bloom ? bloomLevel(remappedOpacity: r) : 0
         return max(h, b)
     }
+
+    /// Blur radii of the three falloff bands, scaled off the dot diameter.
+    @inline(__always)
+    static func radii(dotSize: CGFloat, wide: Bool) -> (inner: CGFloat, middle: CGFloat, outer: CGFloat) {
+        (
+            inner: dotSize * (wide ? 0.75 : 0.55),
+            middle: dotSize * (wide ? 1.45 : 1.0),
+            outer: dotSize * (wide ? 2.2 : 1.55)
+        )
+    }
 }
 
 extension View {
@@ -64,14 +74,12 @@ extension View {
             // luminous LEDs rather than flat colored circles. The outer band
             // stays low-alpha so it can extend beyond an 18pt chat slot without
             // washing out the adjacent label.
-            let inner = dotSize * (wide ? 0.75 : 0.55)
-            let middle = dotSize * (wide ? 1.45 : 1.0)
-            let outer = dotSize * (wide ? 2.2 : 1.55)
+            let radii = DotMatrixBloom.radii(dotSize: dotSize, wide: wide)
             self
                 .brightness(0.16 * level)
-                .shadow(color: color.opacity(0.78 * level), radius: inner)
-                .shadow(color: color.opacity(0.44 * level), radius: middle)
-                .shadow(color: color.opacity(0.18 * level), radius: outer)
+                .shadow(color: color.opacity(0.78 * level), radius: radii.inner)
+                .shadow(color: color.opacity(0.44 * level), radius: radii.middle)
+                .shadow(color: color.opacity(0.18 * level), radius: radii.outer)
         }
     }
 }

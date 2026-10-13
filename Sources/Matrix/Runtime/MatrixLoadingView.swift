@@ -249,7 +249,7 @@ private struct InternalView: View {
     }
 
     var body: some View {
-        // Reduce Motion: DotMatrixBase already pauses TimelineView. Use the
+        // Reduce Motion: every base already pauses its dot-field clock. Use the
         // theme-adaptive fallback rather than leaving a static status-like hue.
         let effectiveUseRandom = reduceMotion ? false : useRandomColor
 

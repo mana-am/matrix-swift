@@ -46,18 +46,15 @@ struct DotMatrixTriangleBase: View {
         let phase = resolveMatrixPhase(animated: props.animated, reducedMotion: reduceMotion)
         let active = phase != .idle
 
-        let matrix = TimelineView(.animation(paused: phase == .idle)) { context in
-            let now = context.date.timeIntervalSinceReferenceDate * safeSpeed
-            VStack(spacing: gap) {
-                ForEach(0..<Self.SIZE, id: \.self) { row in
-                    HStack(spacing: gap) {
-                        ForEach(0..<Self.SIZE, id: \.self) { col in
-                            cell(row: row, col: col, now: now, active: active)
-                        }
-                    }
-                }
-            }
-            .frame(width: matrixSize, height: matrixSize)
+        let matrix = DotField(
+            canvasSize: CGSize(width: matrixSize, height: matrixSize),
+            dotSize: props.dotSize,
+            color: props.color,
+            wideBloom: DotMatrixBloom.clampHalo(props.halo) > 0,
+            paused: phase == .idle
+        ) { wallClock in
+            let now = wallClock * safeSpeed
+            return cells(gap: gap, now: now, active: active)
         }
 
         matrix
@@ -71,27 +68,33 @@ struct DotMatrixTriangleBase: View {
             )
     }
 
-    @ViewBuilder
-    private func cell(row: Int, col: Int, now: TimeInterval, active: Bool) -> some View {
-        let isOn = Self.isActive(row, col)
-        let raw = isOn ? resolver(row, col, now, active) : 0
-        let remapped = isOn
-            ? remapOpacityToTriplet(
-                raw, base: props.opacityBase, mid: props.opacityMid, peak: props.opacityPeak)
-            : 0
-        let display = isOn ? (props.muted ? remapped * 0.44 : remapped) : 0
-        let level = isOn
-            ? DotMatrixBloom.level(remappedOpacity: remapped, bloom: props.bloom, halo: props.halo)
-            : 0
-        Circle()
-            .fill(props.color)
-            .frame(width: props.dotSize, height: props.dotSize)
-            .opacity(display)
-            .dotMatrixBloom(
-                level: level,
-                color: props.color,
-                dotSize: props.dotSize,
-                wide: DotMatrixBloom.clampHalo(props.halo) > 0
-            )
+    /// One tick of the grid. Off-silhouette cells were always fully hidden,
+    /// so only the lit cells are emitted.
+    private func cells(gap: CGFloat, now: TimeInterval, active: Bool) -> [DotFieldCell] {
+        let pitch = props.dotSize + gap
+        var cells: [DotFieldCell] = []
+        cells.reserveCapacity(Self.mask.count)
+        for row in 0..<Self.SIZE {
+            for col in 0..<Self.SIZE where Self.isActive(row, col) {
+                let center = CGPoint(
+                    x: CGFloat(col) * pitch + props.dotSize / 2,
+                    y: CGFloat(row) * pitch + props.dotSize / 2
+                )
+                cells.append(cell(row: row, col: col, center: center, now: now, active: active))
+            }
+        }
+        return cells
+    }
+
+    private func cell(
+        row: Int, col: Int, center: CGPoint, now: TimeInterval, active: Bool
+    ) -> DotFieldCell {
+        let raw = resolver(row, col, now, active)
+        let remapped = remapOpacityToTriplet(
+            raw, base: props.opacityBase, mid: props.opacityMid, peak: props.opacityPeak)
+        let display = props.muted ? remapped * 0.44 : remapped
+        let level = DotMatrixBloom.level(
+            remappedOpacity: remapped, bloom: props.bloom, halo: props.halo)
+        return DotFieldCell(center: center, opacity: display, bloom: level)
     }
 }
