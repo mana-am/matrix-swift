@@ -43,18 +43,15 @@ struct DotMatrix3Base: View {
         let phase = resolveMatrixPhase(animated: props.animated, reducedMotion: reduceMotion)
         let mask = DotMatrix3.mask(for: props.pattern)
 
-        let matrix = TimelineView(.animation(paused: phase == .idle)) { context in
-            let now = context.date.timeIntervalSinceReferenceDate * safeSpeed
-            VStack(spacing: layout.gap) {
-                ForEach(0..<DotMatrix3.SIZE, id: \.self) { row in
-                    HStack(spacing: layout.gap) {
-                        ForEach(0..<DotMatrix3.SIZE, id: \.self) { col in
-                            cell(row: row, col: col, mask: mask, phase: phase, now: now)
-                        }
-                    }
-                }
-            }
-            .frame(width: layout.matrixSpan, height: layout.matrixSpan)
+        let matrix = DotField(
+            canvasSize: CGSize(width: layout.matrixSpan, height: layout.matrixSpan),
+            dotSize: props.dotSize,
+            color: props.color,
+            wideBloom: DotMatrixBloom.clampHalo(props.halo) > 0,
+            paused: phase == .idle
+        ) { wallClock in
+            let now = wallClock * safeSpeed
+            return cells(layout: layout, mask: mask, phase: phase, now: now)
         }
 
         Group {
@@ -75,10 +72,29 @@ struct DotMatrix3Base: View {
         )
     }
 
-    @ViewBuilder
-    private func cell(row: Int, col: Int, mask: [Bool], phase: MatrixPhase, now: TimeInterval)
-        -> some View
-    {
+    /// One tick of the grid, laid out exactly as the old `VStack`/`HStack`
+    /// placed it: `layout.gap` between dots, the block centered in the span.
+    private func cells(
+        layout: Matrix5Layout, mask: [Bool], phase: MatrixPhase, now: TimeInterval
+    ) -> [DotFieldCell] {
+        let pitch = props.dotSize + layout.gap
+        let block = pitch * CGFloat(DotMatrix3.SIZE) - layout.gap
+        let inset = (layout.matrixSpan - block) / 2 + props.dotSize / 2
+        var cells: [DotFieldCell] = []
+        cells.reserveCapacity(DotMatrix3.SIZE * DotMatrix3.SIZE)
+        for row in 0..<DotMatrix3.SIZE {
+            for col in 0..<DotMatrix3.SIZE {
+                let center = CGPoint(
+                    x: inset + CGFloat(col) * pitch, y: inset + CGFloat(row) * pitch)
+                cells.append(cell(row: row, col: col, center: center, mask: mask, phase: phase, now: now))
+            }
+        }
+        return cells
+    }
+
+    private func cell(
+        row: Int, col: Int, center: CGPoint, mask: [Bool], phase: MatrixPhase, now: TimeInterval
+    ) -> DotFieldCell {
         let index = DotMatrix3.rowMajorIndex(row, col)
         let active = mask[index]
         let opacity = active ? computeOpacity(index: index, row: row, col: col, phase: phase, now: now) : 0
@@ -91,16 +107,7 @@ struct DotMatrix3Base: View {
         let bloomLevel = active ? DotMatrixBloom.level(
             remappedOpacity: opacity, bloom: props.bloom, halo: props.halo
         ) : 0
-        Circle()
-            .fill(props.color)
-            .frame(width: props.dotSize, height: props.dotSize)
-            .opacity(displayOpacity)
-            .dotMatrixBloom(
-                level: bloomLevel,
-                color: props.color,
-                dotSize: props.dotSize,
-                wide: DotMatrixBloom.clampHalo(props.halo) > 0
-            )
+        return DotFieldCell(center: center, opacity: displayOpacity, bloom: bloomLevel)
     }
 
     private func computeOpacity(
